@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"fmt"
 	"io"
 	"net"
+	"os"
 )
 
 func main() {
@@ -19,15 +21,14 @@ func main() {
 	}
 
 	defer func() {
-		fmt.Println("Bye")
-
+		fmt.Println("Closing connection with the server!")
 		conn.Close()
 	}()
 
 	block, cipherErr := aes.NewCipher(key)
 
 	if cipherErr != nil {
-		fmt.Errorf("Can't create cipher:", cipherErr)
+		fmt.Errorf("Create cipher error:", cipherErr)
 
 		return
 	}
@@ -43,7 +44,7 @@ func main() {
 	_, ivWriteErr := conn.Write(iv)
 
 	if ivWriteErr != nil {
-		fmt.Errorf("Can't send IV:", ivWriteErr)
+		fmt.Errorf("IV send Error:", ivWriteErr)
 
 		return
 	} else {
@@ -51,28 +52,33 @@ func main() {
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
+	reader := bufio.NewReader(os.Stdin)
 
-	data := [][]byte{
-		[]byte("Test one"),
-		[]byte("Hello crypto"),
-		[]byte("Hello word"),
-		[]byte("Hello excel"),
-		[]byte("Hello powerpoint"),
-	}
+	for {
+		fmt.Print("Text to send (q to exit): ")
 
-	for _, d := range data {
-		encrypted := make([]byte, len(d))
+		input, _ := reader.ReadString('\n')
 
-		stream.XORKeyStream(encrypted, d)
+		input = input[:len(input)-1]
+
+		if input == "q" {
+			break
+		}
+
+		dataToWrite := []byte(input)
+
+		encrypted := make([]byte, len(dataToWrite))
+
+		stream.XORKeyStream(encrypted, dataToWrite)
 
 		writeLen, writeErr := conn.Write(encrypted)
 
 		if writeErr != nil {
-			fmt.Errorf("Write failed:", writeErr)
-
+			fmt.Errorf("Write Error:", writeErr)
 			return
 		}
 
-		fmt.Println("Encrypted Data Written:", string(d), encrypted, writeLen)
+		fmt.Println("Encrypted Data Written:", encrypted, writeLen)
+
 	}
 }
