@@ -9,9 +9,14 @@ import (
 	"io"
 	"net"
 	"os"
+
+	"github.com/open-quantum-safe/liboqs-go/oqs"
 )
 
 func main() {
+
+	fmt.Println(oqs.EnabledKEMs())
+
 	key := []byte("example key 1234")
 
 	conn, err := net.Dial("tcp", "127.0.0.1:9080")
