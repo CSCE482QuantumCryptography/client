@@ -7,14 +7,12 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	// "log"
 	"net"
 	"os"
-	// "path/filepath"
-	// "time"
+
+	"time"
 
 	"github.com/open-quantum-safe/liboqs-go/oqs"
-	// "github.com/xuri/excelize/v2"
 )
 
 func main() {
@@ -46,7 +44,10 @@ func main() {
 	}
 
 	fmt.Println("\nKEM details:")
+	fmt.Println(client.Details())
+	fmt.Println()
 
+	fmt.Println("Sending public kyber key to server!")
 	conn.Write(clientPublicKey)
 
 	ciphertext := make([]byte, 768)
@@ -55,6 +56,8 @@ func main() {
 	if ciphertextReadErr != nil {
 		panic("Error reading ciphertext!")
 	}
+
+	fmt.Println("Received shared secret from server!")
 
 	sharedSecretClient, err := client.DecapSecret(ciphertext)
 	if err != nil {
@@ -120,4 +123,10 @@ func main() {
 
 	}
 
+	endTime := time.Now()
+	executionTime := endTime.Sub(startTime)
+
+	fmt.Println("Execution time: ", executionTime)
+
+	// BENCHMARK
 }
