@@ -20,8 +20,6 @@ import (
 func main() {
 
 	startTime := time.Now()
-	endTime := time.Now()
-	executionTime := endTime.Sub(startTime)
 	
 	fmt.Println(oqs.EnabledKEMs())
 	
@@ -94,6 +92,11 @@ func main() {
 		fmt.Println("Encrypted Data Written:", encrypted, writeLen)
 
 	}
+
+	endTime := time.Now()
+	executionTime := endTime.Sub(startTime)
+
+	// BENCHMARK
 
 	saveFolderPath, err := os.Getwd()
 	if err != nil {
