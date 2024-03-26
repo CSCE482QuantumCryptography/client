@@ -18,13 +18,6 @@ import (
 )
 
 func main() {
-
-	startTime := time.Now()
-	
-	fmt.Println(oqs.EnabledKEMs())
-	
-	key := []byte("example key 1234")
-
 	conn, err := net.Dial("tcp", "127.0.0.1:9080")
 
 	if err != nil {
@@ -36,7 +29,40 @@ func main() {
 		conn.Close()
 	}()
 
-	block, cipherErr := aes.NewCipher(key)
+	// KEM
+
+	kemName := "Kyber512"
+	client := oqs.KeyEncapsulation{}
+	defer client.Clean() // clean up even in case of panic
+
+	if err := client.Init(kemName, nil); err != nil {
+		panic(err)
+	}
+
+	clientPublicKey, err := client.GenerateKeyPair()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nKEM details:")
+
+	conn.Write(clientPublicKey)
+
+	ciphertext := make([]byte, 768)
+
+	_, ciphertextReadErr := conn.Read(ciphertext)
+	if ciphertextReadErr != nil {
+		panic("Error reading ciphertext!")
+	}
+
+	sharedSecretClient, err := client.DecapSecret(ciphertext)
+	if err != nil {
+		panic(err)
+	}
+
+	// AES
+
+	block, cipherErr := aes.NewCipher(sharedSecretClient)
 
 	if cipherErr != nil {
 		fmt.Errorf("Create cipher error:", cipherErr)
