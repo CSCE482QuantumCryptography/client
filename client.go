@@ -10,7 +10,6 @@ import (
 	"net"
 	"os"
 
-	"time"
 
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 )
@@ -123,10 +122,4 @@ func main() {
 
 	}
 
-	endTime := time.Now()
-	executionTime := endTime.Sub(startTime)
-
-	fmt.Println("Execution time: ", executionTime)
-
-	// BENCHMARK
 }
