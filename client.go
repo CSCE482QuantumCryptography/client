@@ -18,6 +18,9 @@ import (
 )
 
 func main() {
+
+	startTime := time.Now()
+
 	conn, err := net.Dial("tcp", "127.0.0.1:9080")
 
 	if err != nil {
