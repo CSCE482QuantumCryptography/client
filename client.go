@@ -10,14 +10,14 @@ import (
 	"net"
 	"os"
 
+	"time"
+
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 )
 
 func main() {
 
-	fmt.Println(oqs.EnabledKEMs())
-
-	key := []byte("example key 1234")
+	startTime := time.Now()
 
 	conn, err := net.Dial("tcp", "127.0.0.1:9080")
 
@@ -30,7 +30,45 @@ func main() {
 		conn.Close()
 	}()
 
-	block, cipherErr := aes.NewCipher(key)
+	// KEM
+
+	kemName := "Kyber512"
+	client := oqs.KeyEncapsulation{}
+	defer client.Clean() // clean up even in case of panic
+
+	if err := client.Init(kemName, nil); err != nil {
+		panic(err)
+	}
+
+	clientPublicKey, err := client.GenerateKeyPair()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nKEM details:")
+	fmt.Println(client.Details())
+	fmt.Println()
+
+	fmt.Println("Sending public kyber key to server!")
+	conn.Write(clientPublicKey)
+
+	ciphertext := make([]byte, 768)
+
+	_, ciphertextReadErr := conn.Read(ciphertext)
+	if ciphertextReadErr != nil {
+		panic("Error reading ciphertext!")
+	}
+
+	fmt.Println("Received shared secret from server!")
+
+	sharedSecretClient, err := client.DecapSecret(ciphertext)
+	if err != nil {
+		panic(err)
+	}
+
+	// AES
+
+	block, cipherErr := aes.NewCipher(sharedSecretClient)
 
 	if cipherErr != nil {
 		fmt.Errorf("Create cipher error:", cipherErr)
@@ -86,4 +124,11 @@ func main() {
 		fmt.Println("Encrypted Data Written:", encrypted, writeLen)
 
 	}
+
+	endTime := time.Now()
+	executionTime := endTime.Sub(startTime)
+
+	fmt.Println("Execution time: ", executionTime)
+
+	// BENCHMARK
 }
