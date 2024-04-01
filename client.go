@@ -5,19 +5,34 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
 	"os"
 
-
+	"github.com/CSCE482QuantumCryptography/qs509"
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 )
 
 func main() {
+	qs509.Init("../../build/bin/openssl", "../../openssl/apps/openssl.cnf")
+
+	var d3_sa qs509.SignatureAlgorithm
+	d3_sa.Set("DILITHIUM3")
+
+	qs509.GenerateCsr(d3_sa, "client_private_key.key", "client_csr.csr")
+	qs509.SignCsr("./client_csr.csr", "client_signed_crt.crt", "../qs509/etc/crt/dilithium3_CA.crt", "../qs509/etc/keys/dilithium3_CA.key")
+
+	clientCertFile, err := os.ReadFile("client_signed_crt.crt")
+	if err != nil {
+		panic(err)
+	}
+
+	clientCertLen := make([]byte, 4)
+	binary.BigEndian.PutUint32(clientCertLen, uint32(len(clientCertFile)))
 
 	conn, err := net.Dial("tcp", "127.0.0.1:9080")
-
 	if err != nil {
 		panic(err)
 	}
@@ -26,6 +41,22 @@ func main() {
 		fmt.Println("Closing connection with the server!")
 		conn.Close()
 	}()
+
+	// Cert Auth
+	serverCertLenBytes := make([]byte, 4)
+	_, err = conn.Read(serverCertLenBytes)
+	if err != nil {
+		panic(err)
+	}
+	serverCertLenInt := int(binary.BigEndian.Uint32(serverCertLenBytes))
+
+	fmt.Println("Server cert size: ", serverCertLenInt)
+
+	serverCertFile := make([]byte, serverCertLenInt)
+	_, err = conn.Read(serverCertFile)
+	if err != nil && err != io.EOF {
+		panic(err)
+	}
 
 	// KEM
 
