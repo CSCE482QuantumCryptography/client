@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/binary"
+	"flag"
 	"fmt"
 	"io"
 	"net"
@@ -16,7 +17,15 @@ import (
 )
 
 func main() {
-	qs509.Init("../../build/bin/openssl", "../../openssl/apps/openssl.cnf")
+
+	opensslPath := flag.String("openssl-path", "../../build/bin/openssl", "the path to openssl 3.3")
+	opensslCNFPath := flag.String("openssl-cnf-path", "../../openssl/apps/openssl.cnf", "the path to openssl config")
+	dst := flag.String("dst", "127.0.0.1:9080", "the path to openssl config")
+
+	// Parse flags
+	flag.Parse()
+
+	qs509.Init(*opensslPath, *opensslCNFPath)
 
 	var d3_sa qs509.SignatureAlgorithm
 	d3_sa.Set("DILITHIUM3")
@@ -34,7 +43,7 @@ func main() {
 
 	fmt.Println("Client Certificate Size: ", len(clientCertFile))
 
-	conn, err := net.Dial("tcp", "127.0.0.1:9080")
+	conn, err := net.Dial("tcp", *dst)
 	if err != nil {
 		panic(err)
 	}
