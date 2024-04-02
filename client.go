@@ -32,6 +32,8 @@ func main() {
 	clientCertLen := make([]byte, 4)
 	binary.BigEndian.PutUint32(clientCertLen, uint32(len(clientCertFile)))
 
+	fmt.Println("Client Certificate Size: ", len(clientCertFile))
+
 	conn, err := net.Dial("tcp", "127.0.0.1:9080")
 	if err != nil {
 		panic(err)
@@ -43,6 +45,7 @@ func main() {
 	}()
 
 	// Cert Auth
+	fmt.Println("Reading Server Certificate!")
 	serverCertLenBytes := make([]byte, 4)
 	_, err = conn.Read(serverCertLenBytes)
 	if err != nil {
@@ -57,6 +60,30 @@ func main() {
 	if err != nil && err != io.EOF {
 		panic(err)
 	}
+
+	isValid, err := qs509.VerifyCertificate("../qs509/etc/crt/dilithium3_CA.crt", serverCertFile)
+	if err != nil {
+		panic(err)
+	}
+
+	if !isValid {
+		panic("I dont trust this server!")
+	}
+
+	fmt.Println("Verified Server Certificate!")
+
+	fmt.Println("Writing my certificate to server!")
+	_, err = conn.Write(clientCertLen)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = conn.Write(clientCertFile)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println()
 
 	// KEM
 
