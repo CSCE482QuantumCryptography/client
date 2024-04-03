@@ -16,6 +16,19 @@ import (
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 )
 
+func readFromServer(conn net.Conn, buf []byte, readLen int) (int, error) {
+	totalRead := 0
+	for totalRead < readLen {
+		n, err := conn.Read(buf[totalRead:])
+		if err != nil {
+			return 0, err
+		}
+		totalRead += n
+	}
+	return totalRead, nil
+
+}
+
 func main() {
 
 	opensslPath := flag.String("openssl-path", "../../build/bin/openssl", "the path to openssl 3.3")
@@ -58,17 +71,18 @@ func main() {
 	// Cert Auth
 	fmt.Println("Reading Server Certificate!")
 	serverCertLenBytes := make([]byte, 4)
-	_, err = conn.Read(serverCertLenBytes)
+	_, err = readFromServer(conn, serverCertLenBytes, 4)
 	if err != nil {
 		panic(err)
 	}
+
 	serverCertLenInt := int(binary.BigEndian.Uint32(serverCertLenBytes))
 
 	fmt.Println("Server cert size: ", serverCertLenInt)
 
 	serverCertFile := make([]byte, serverCertLenInt)
-	_, err = conn.Read(serverCertFile)
-	if err != nil && err != io.EOF {
+	_, err = readFromServer(conn, serverCertFile, serverCertLenInt)
+	if err != nil {
 		panic(err)
 	}
 
@@ -120,9 +134,9 @@ func main() {
 
 	ciphertext := make([]byte, client.Details().LengthCiphertext)
 
-	_, ciphertextReadErr := conn.Read(ciphertext)
-	if ciphertextReadErr != nil {
-		panic("Error reading ciphertext!")
+	_, err = readFromServer(conn, ciphertext, client.Details().LengthCiphertext)
+	if err != nil {
+		panic(err)
 	}
 
 	fmt.Println("Received shared secret from server!")
