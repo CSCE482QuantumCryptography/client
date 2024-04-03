@@ -20,17 +20,19 @@ func main() {
 
 	opensslPath := flag.String("openssl-path", "../../build/bin/openssl", "the path to openssl 3.3")
 	opensslCNFPath := flag.String("openssl-cnf-path", "../../openssl/apps/openssl.cnf", "the path to openssl config")
-	dst := flag.String("dst", "127.0.0.1:9080", "the path to openssl config")
+	dst := flag.String("dst", "127.0.0.1:9080", "the address being dialed")
+	signingAlg := flag.String("sa", "DILITHIUM3", "the algorithm used to sign the client certificate")
+	kemAlg := flag.String("ka", "Kyber512", "the algorithm used for generating shared secret")
 
 	// Parse flags
 	flag.Parse()
 
 	qs509.Init(*opensslPath, *opensslCNFPath)
 
-	var d3_sa qs509.SignatureAlgorithm
-	d3_sa.Set("DILITHIUM3")
+	var sa qs509.SignatureAlgorithm
+	sa.Set(*signingAlg)
 
-	qs509.GenerateCsr(d3_sa, "client_private_key.key", "client_csr.csr")
+	qs509.GenerateCsr(sa, "client_private_key.key", "client_csr.csr")
 	qs509.SignCsr("./client_csr.csr", "client_signed_crt.crt", "../qs509/etc/crt/dilithium3_CA.crt", "../qs509/etc/keys/dilithium3_CA.key")
 
 	clientCertFile, err := os.ReadFile("client_signed_crt.crt")
@@ -96,7 +98,7 @@ func main() {
 
 	// KEM
 
-	kemName := "Kyber512"
+	kemName := *kemAlg
 	client := oqs.KeyEncapsulation{}
 	defer client.Clean() // clean up even in case of panic
 
@@ -116,7 +118,7 @@ func main() {
 	fmt.Println("Sending public kyber key to server!")
 	conn.Write(clientPublicKey)
 
-	ciphertext := make([]byte, 768)
+	ciphertext := make([]byte, client.Details().LengthCiphertext)
 
 	_, ciphertextReadErr := conn.Read(ciphertext)
 	if ciphertextReadErr != nil {
@@ -140,7 +142,7 @@ func main() {
 		return
 	}
 
-	iv := make([]byte, aes.BlockSize)
+	iv := make([]byte, block.BlockSize())
 
 	if _, randReadErr := io.ReadFull(rand.Reader, iv); randReadErr != nil {
 		fmt.Errorf("Can't build random iv", randReadErr)
