@@ -1,5 +1,7 @@
-github.com/CSCE482QuantumCryptography/qs509 v0.0.0-20240403214007-ee22fae667f0 h1:790hPLVU18N2JRdtxDXhcmlYcdTWWTAOos8faQY4SPI=
-github.com/CSCE482QuantumCryptography/qs509 v0.0.0-20240403214007-ee22fae667f0/go.mod h1:dKk0Dg6HkIRqLaX9SfpRW8n2UexWIn0sGe/W93i0bHY=
+github.com/CSCE482QuantumCryptography/qs509 v0.0.0-20240403231150-294478da12ac h1:TGeK8m/iMll9/tfIcne6aHO5qeppqz+YaO8yx1jZXQU=
+github.com/CSCE482QuantumCryptography/qs509 v0.0.0-20240403231150-294478da12ac/go.mod h1:dKk0Dg6HkIRqLaX9SfpRW8n2UexWIn0sGe/W93i0bHY=
+github.com/CSCE482QuantumCryptography/qs509 v0.0.0-20240403232150-d5ed0f611493 h1:Zv5SWNUENIHfhbPFMMfbDZF8Cx9WVurLZ7j1BuHeXwM=
+github.com/CSCE482QuantumCryptography/qs509 v0.0.0-20240403232150-d5ed0f611493/go.mod h1:dKk0Dg6HkIRqLaX9SfpRW8n2UexWIn0sGe/W93i0bHY=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=

@@ -43,6 +43,8 @@ func main() {
 	// Parse flags
 	flag.Parse()
 
+	totalTimeStart := time.Now()
+
 	qs509.Init(*opensslPath, *opensslCNFPath)
 
 	var sa qs509.SignatureAlgorithm
@@ -72,8 +74,8 @@ func main() {
 
 	defer func() {
 		fmt.Println("Closing connection with the server!")
+		qs509.BenchmarkMap(timeMap, *signingAlg, *kemAlg, "../"+*signingAlg+"_"+*kemAlg+".xlsx", "client")
 		conn.Close()
-		qs509.BenchmarkMap(timeMap, *signingAlg, *kemAlg, *signingAlg+"_"+*kemAlg+".xlsx")
 
 		for key, value := range timeMap {
 			executionTime := value[1].Sub(value[0])
@@ -83,6 +85,7 @@ func main() {
 
 	}()
 
+	certAuthStart := time.Now()
 	// Cert Auth
 	fmt.Println("Reading Server Certificate!")
 	serverCertLenBytes := make([]byte, 4)
@@ -134,8 +137,12 @@ func main() {
 	timeMap["writeClientCert"] = []time.Time{writeClientCertStart, writeClientCertEnd}
 
 	fmt.Println()
+	certAuthEnd := time.Now()
+	timeMap["certAuth"] = []time.Time{certAuthStart, certAuthEnd}
 
 	// KEM
+
+	kemStart := time.Now()
 
 	kemName := *kemAlg
 	client := oqs.KeyEncapsulation{}
@@ -183,7 +190,12 @@ func main() {
 	decapSecretEnd := time.Now()
 	timeMap["decapSecret"] = []time.Time{decapSecretStart, decapSecretEnd}
 
+	kemEnd := time.Now()
+	timeMap["kem"] = []time.Time{kemStart, kemEnd}
+
 	// AES
+
+	aesStart := time.Now()
 
 	block, cipherErr := aes.NewCipher(sharedSecretClient)
 
@@ -213,6 +225,12 @@ func main() {
 
 	stream := cipher.NewCFBEncrypter(block, iv)
 	reader := bufio.NewReader(os.Stdin)
+
+	aesEnd := time.Now()
+	timeMap["aes"] = []time.Time{aesStart, aesEnd}
+
+	totalTimeEnd := time.Now()
+	timeMap["TotalTime"] = []time.Time{totalTimeStart, totalTimeEnd}
 
 	for {
 		fmt.Print("Text to send (q to exit): ")
