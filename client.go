@@ -39,6 +39,8 @@ func main() {
 	dst := flag.String("dst", "127.0.0.1:9080", "the address being dialed")
 	signingAlg := flag.String("sa", "DILITHIUM3", "the algorithm used to sign the client certificate")
 	kemAlg := flag.String("ka", "Kyber512", "the algorithm used for generating shared secret")
+	caCert := flag.String("ca", "../qs509/etc/crt/dilithium3_CA.crt", "the file location of the ca cert used to sign")
+	caKey := flag.String("ca-key", "../qs509/etc/keys/dilithium3_CA.key", "the file location of the ca key used to sign")
 
 	// Parse flags
 	flag.Parse()
@@ -52,7 +54,7 @@ func main() {
 
 	signCsrStart := time.Now()
 	qs509.GenerateCsr(sa, "client_private_key.key", "client_csr.csr")
-	qs509.SignCsr("./client_csr.csr", "client_signed_crt.crt", "../qs509/etc/crt/dilithium3_CA.crt", "../qs509/etc/keys/dilithium3_CA.key")
+	qs509.SignCsr("./client_csr.csr", "client_signed_crt.crt", *caCert, *caKey)
 	signCsrEnd := time.Now()
 
 	timeMap["signCsr"] = []time.Time{signCsrStart, signCsrEnd}
@@ -109,7 +111,7 @@ func main() {
 	timeMap["readServerCert"] = []time.Time{readServerCertStart, readServerCertEnd}
 
 	verifyServerCertStart := time.Now()
-	isValid, err := qs509.VerifyCertificate("../qs509/etc/crt/dilithium3_CA.crt", serverCertFile)
+	isValid, err := qs509.VerifyCertificate(*caCert, serverCertFile)
 	if err != nil {
 		panic(err)
 	}
