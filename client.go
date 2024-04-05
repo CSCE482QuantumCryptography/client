@@ -48,11 +48,27 @@ func main() {
 
 	// KEM
 
+	var sharedSecretClient []byte
+
 	kemStart := time.Now()
-	sharedSecretClient, err := OqsKem(conn)
-	if err != nil {
-		panic(err)
+
+	if *kemAlg == "rsa" {
+		sharedSecretClient, err = RSAKem(conn)
+		if err != nil {
+			panic(err)
+		}
+	} else if *kemAlg == "ec" {
+		sharedSecretClient, err = ECKem(conn)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		sharedSecretClient, err = OqsKem(conn)
+		if err != nil {
+			panic(err)
+		}
 	}
+
 	kemEnd := time.Now()
 	timeMap["kem"] = []time.Time{kemStart, kemEnd}
 
