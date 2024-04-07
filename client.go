@@ -12,11 +12,15 @@ func main() {
 
 	totalTimeStart := time.Now()
 
+	signCsrStart := time.Now()
 	// Create and sign CSR for client
 	clientCertFile, clientCertLen, err := CreateCsr()
 	if err != nil {
 		panic(err)
 	}
+	signCsrEnd := time.Now()
+
+	timeMap["signCsr"] = []time.Time{signCsrStart, signCsrEnd}
 
 	// Dial server
 	conn, err := net.Dial("tcp", *dst)
@@ -32,7 +36,7 @@ func main() {
 		for key, value := range timeMap {
 			executionTime := value[1].Sub(value[0])
 			fmt.Print(key + ": ")
-			fmt.Println(executionTime)
+			fmt.Println(executionTime.Microseconds())
 		}
 
 	}()
