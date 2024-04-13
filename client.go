@@ -23,8 +23,18 @@ func main() {
 	timeMap["signCsr"] = []time.Time{signCsrStart, signCsrEnd}
 
 	// Dial server
-	conn, err := net.Dial("tcp", *dst)
+	var conn net.Conn
+	for i := 0; i < 5; i++ {
+		conn, err = net.Dial("tcp", *dst)
+		if err == nil {
+			break
+		} else {
+			fmt.Println("Couldn't reach server, retrying")
+			time.Sleep(time.Second * 3)
+		}
+	}
 	if err != nil {
+		fmt.Println("Maximum retries met, terminating.")
 		panic(err)
 	}
 
@@ -33,11 +43,13 @@ func main() {
 		qs509.BenchmarkMap(timeMap, *signingAlg, *kemAlg, "../"+*signingAlg+"_"+*kemAlg+".xlsx", "client")
 		conn.Close()
 
+		fmt.Println("################################################################################")
 		for key, value := range timeMap {
 			executionTime := value[1].Sub(value[0])
 			fmt.Print(key + ": ")
-			fmt.Println(executionTime.Microseconds())
+			fmt.Println(executionTime)
 		}
+		fmt.Println("################################################################################")
 
 	}()
 
